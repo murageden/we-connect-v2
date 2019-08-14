@@ -7,20 +7,27 @@ from .run import app
 db = SQLAlchemy(app)
 
 
-class User(db.Model):
-    """This class represents the user table."""
+class BaseModel(db.Model):
+    """ Class is the base model """
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
+    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
+    date_modified = db.Column(db.DateTime,
+                              onupdate=db.func.current_timestamp())
+
+
+class User(BaseModel):
+    """This class represents the user table."""
+
     username = db.Column(db.String, unique=True, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
     logged_in_token = db.Column(db.String, default=None)
-    businesses = db.relationship('Business', backref='owner', lazy=True)
-    reviews = db.relationship('Review', backref='owner', lazy=True)
-    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
-    date_modified = db.Column(db.DateTime,
-                              onupdate=db.func.current_timestamp())
+    businesses = db.relationship('Business', backref=backref('owner',
+                uselist=False), cascade="all, delete-orphan", lazy=True)
+    reviews = db.relationship('Review', backref=backref('owner',
+                uselist=False), cascade="all, delete-orphan", lazy=True)
 
     @staticmethod
     def get_user(username_or_email):
@@ -30,29 +37,21 @@ class User(db.Model):
         return query1 or query2
 
 
-class Business(db.Model):
+class Business(BaseModel):
     """This class represents the business table."""
 
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
     category = db.Column(db.String, nullable=False)
     location = db.Column(db.String, nullable=False)
     description = db.Column(db.String, nullable=False)
     business_owner = db.Column(db.String, db.ForeignKey('user.username'))
-    reviews = db.relationship('Review', backref='review_for', lazy=True)
-    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
-    date_modified = db.Column(db.DateTime,
-                              onupdate=db.func.current_timestamp())
+    reviews = db.relationship('Review', backref=backref('review_for',
+                uselist=False), cascade="all, delete-orphan", lazy=True)
 
 
-class Review(db.Model):
+class Review(BaseModel):
     """This class represents the review table."""
 
-    id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
     body = db.Column(db.String, nullable=False)
     review_owner = db.Column(db.String, db.ForeignKey('user.username'))
     business_id = db.Column(db.Integer, db.ForeignKey('business.id'))
-    date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
-    date_modified = db.Column(db.DateTime,
-                              onupdate=db.func.current_timestamp())
