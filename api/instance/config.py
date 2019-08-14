@@ -7,7 +7,7 @@ class Config(object):
 
     DEBUG = False
     CSRF_ENABLED = True
-    SECRET = os.getenv('APP_SECRET')
+    SECRET_KEY = os.getenv('APP_SECRET')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
 
@@ -16,12 +16,10 @@ class DevelopmentConfig(Config):
 
     DEBUG = True
 
-
 class TestingConfig(Config):
     """Configurations for Testing, with a separate test database."""
 
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://andela@localhost:5432/test_db'
     DEBUG = True
 
 

@@ -1,5 +1,10 @@
 """we_connect/models.py."""
-from run import db
+from flask_sqlalchemy import SQLAlchemy
+
+from .run import app
+
+# initialize sql-alchemy
+db = SQLAlchemy(app)
 
 
 class User(db.Model):
@@ -10,6 +15,7 @@ class User(db.Model):
     username = db.Column(db.String, unique=True, nullable=False)
     email = db.Column(db.String, unique=True, nullable=False)
     password = db.Column(db.String, nullable=False)
+    logged_in_token = db.Column(db.String, default=None)
     businesses = db.relationship('Business', backref='owner', lazy=True)
     reviews = db.relationship('Review', backref='owner', lazy=True)
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())

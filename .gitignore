@@ -1,1 +1,11 @@
+api/m-env/*
+*.vscode
+*.coverage
+api/__pycache__/*
+api/instance/__pycache__/*
+api/v2/*
+*.pytest_cache
+*.pickle
+m-env
+*.pyc
 *.DS_Store

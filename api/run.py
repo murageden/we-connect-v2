@@ -1,16 +1,25 @@
 """/run.py."""
 import os
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask
+from flask_cors import CORS
 
-from api import create_app
+# local import
+from .instance.config import app_config
 
-# initialize sql-alchemy
-db = SQLAlchemy()
 
-config_name = os.getenv('APP_CONFIGURATION') or 'testing'
+def create_app(config_name):
+    """Configure and creates the app."""
+    app = Flask(__name__, instance_relative_config=True)
+    CORS(app)
+    app.config.from_object(app_config[config_name])
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    return app
+
+
+config_name = os.getenv('APP_CONFIGURATION')
 app = create_app(config_name)
 
-db.init_app(app)
 
 if __name__ == '__main__':
     app.run()

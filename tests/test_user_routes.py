@@ -2,7 +2,7 @@
 from flask import json
 import unittest
 # local imports
-from run import db
+from api.models import db
 from api.routes import app
 
 
@@ -17,31 +17,27 @@ class UserRoutesTestCase(unittest.TestCase):
             "name": "My Test Name",
             "email": "test1@testing.com",
             "username": "test1",
-            "password": "1234user"
+            "password": "123$usr"
         }
         self.test_user2 = {
             "name": "My Second Test",
             "email": "test1@testing.com",  # similar email to the previous user
             "username": "test2",
-            "password": "1234user"
+            "password": "123$usr"
         }
         self.test_user3 = {
             "name": "My Third Test",
             "email": "test3@testing.com",
             "username": "test1",  # similar username to a previous user
-            "password": "1234user"
+            "password": "123$usr"
         }
         self.test_login = {
             "username": "test1",
-            "password": "1234user"
+            "password": "123$usr"
         }
         self.test_wrong_pass = {
             "username": "test1",
-            "password": "1234users"
-        }
-        self.test_change_pass = {
-            "old password": "1234user",
-            "new password": "5678user"
+            "password": "123$usrs"
         }
 
         # binds the app to the current context
@@ -51,7 +47,7 @@ class UserRoutesTestCase(unittest.TestCase):
 
     def test_register_user_with_correct_data(self):
         """Test user registration with all info provided."""
-        self.response = self.client.post('/weconnect/api/v2/auth/register',
+        self.response = self.client.post('/api/v2/auth/register',
                                          data=json.dumps(self.test_user),
                                          headers={
                                              'content-type': 'application/json'
@@ -61,13 +57,12 @@ class UserRoutesTestCase(unittest.TestCase):
 
     def test_register_user_with_existing_email_returns_error_msg(self):
         """Test user registration with all info provided."""
-        """Provide a registered email."""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.test_user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/register',
+        self.response = self.client.post('/api/v2/auth/register',
                                          data=json.dumps(self.test_user2),
                                          headers={
                                              'content-type': 'application/json'
@@ -77,13 +72,12 @@ class UserRoutesTestCase(unittest.TestCase):
 
     def test_register_user_with_registered_username_returns_error_msg(self):
         """Test user registration with all info provided."""
-        """Provide a registered username."""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.test_user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/register',
+        self.response = self.client.post('/api/v2/auth/register',
                                          data=json.dumps(self.test_user3),
                                          headers={
                                              'content-type': 'application/json'
@@ -93,12 +87,12 @@ class UserRoutesTestCase(unittest.TestCase):
 
     def test_login_user_with_correct_login(self):
         """Test user login with all log in details provided."""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.test_user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.test_login),
                                          headers={
                                              'content-type': 'application/json'
@@ -108,50 +102,51 @@ class UserRoutesTestCase(unittest.TestCase):
 
     def test_login_user_with_non_existent_email(self):
         """Try to login with no user created."""
-        """The email is not existing in the data structure."""
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.test_login),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.assertEqual(self.response.status_code, 400)
-        self.assertIn("Email or username is incorrect",
+        self.assertIn("Email or username provided does not match any user",
                       str(self.response.data))
 
     def test_login_with_incorrect_email(self):
         """Test user login with all log in details provided."""
-        """The password provided is incorrect."""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.test_user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.test_wrong_pass),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.assertEqual(self.response.status_code, 400)
-        self.assertIn("Wrong", str(self.response.data))
+        self.assertIn("Wrong email or username/password combination",
+                      str(self.response.data))
 
     def test_reset_password_with_correct_token(self):
         """Test password change with a token passed into the headers."""
-        """Create a user, login the user, get the token"""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.test_user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
-                                         data=json.dumps(self.test_login),
+        self.response = self.client.post('/api/v2/get-reset-token',
+                                         data=json.dumps(
+                                             {"email": "test1@testing.com"}),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.token = json.loads(self.response.data)['token']  # grab the token
-        self.response = self.client.post('/weconnect/api/v2/auth/reset-password',
-                                         data=json.dumps(self.test_change_pass),
+        self.response = self.client.post('/api/v2/auth/reset-password',
+                                         data=json.dumps(
+                                             {"new_password": "%6hjhk"}),
                                          headers={
-                                             'content-type': 'application/json',
+                                             'content-type':
+                                             'application/json',
                                              'x-access-token': self.token
                                          })
         self.assertEqual(self.response.status_code, 200)
@@ -160,22 +155,13 @@ class UserRoutesTestCase(unittest.TestCase):
 
     def test_reset_password_with_incorrect_token(self):
         """Test password change with a wrong token passed into the headers."""
-        """Create a user, login the user, get the token"""
-        self.client.post('/weconnect/api/v2/auth/register',
-                         data=json.dumps(self.test_user),
-                         headers={
-                             'content-type': 'application/json'
-                         })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
-                                         data=json.dumps(self.test_login),
+        self.token = "a wrong token token string"
+        self.response = self.client.post('/api/v2/auth/reset-password',
+                                         data=json.dumps(
+                                             {"new password": "%6hjhk"}),
                                          headers={
-                                             'content-type': 'application/json'
-                                         })
-        self.token = "a wrong token"
-        self.response = self.client.post('/weconnect/api/v2/auth/reset-password',
-                                         data=json.dumps(self.test_change_pass),
-                                         headers={
-                                             'content-type': 'application/json',
+                                             'content-type':
+                                             'application/json',
                                              'x-access-token': self.token
                                          })
         self.assertEqual(self.response.status_code, 401)

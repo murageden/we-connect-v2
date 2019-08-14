@@ -2,7 +2,7 @@
 from flask import json
 import unittest
 # local imports
-from run import db
+from api.models import db
 from api.routes import app
 
 
@@ -28,24 +28,24 @@ class ReviewRoutesTestCase(unittest.TestCase):
             "name": "My Test Name",
             "email": "test1@testing.com",
             "username": "test1",
-            "password": "1234user"
+            "password": "123$usr"
         }
         # for registering a user
         self.another_user = {
             "name": "Another Test Name",
             "email": "test2@testing.com",
             "username": "test2",
-            "password": "5678user"
+            "password": "56##8user"
         }
         # for logging in a user
         self.login = {
             "username": "test1",
-            "password": "1234user"
+            "password": "123$usr"
         }
         # for logging in a user
         self.another_login = {
             "username": "test2",
-            "password": "5678user"
+            "password": "56##8user"
         }
         # for registering a bs
         self.bs = {
@@ -69,47 +69,47 @@ class ReviewRoutesTestCase(unittest.TestCase):
 
     def test_create_review_for_an_existing_business(self):
         """Test creation of a review with all required details."""
-        """Register two users, each businesses, create review for one."""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.login),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.token = json.loads(self.response.data)['token']  # grab the token
-        self.client.post('/weconnect/api/v2/businesses',
+        self.client.post('/api/v2/businesses',
                          data=json.dumps(self.bs),
                          headers={
                              'content-type': 'application/json',
                              'x-access-token': self.token
                          })
         # Register another user, login them and register their business
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.another_user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.another_login),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.token = json.loads(self.response.data)['token']  # grab the token
-        self.client.post('/weconnect/api/v2/businesses',
+        self.client.post('/api/v2/businesses',
                          data=json.dumps(self.another_bs),
                          headers={
                              'content-type': 'application/json',
                              'x-access-token': self.token
                          })
         # this user reviews bs 1 which belongs to the other user
-        self.response = self.client.post('/weconnect/api/v2/businesses/1/reviews',
+        self.response = self.client.post('/api/v2/businesses/1/reviews',
                                          data=json.dumps(self.test_review),
                                          headers={
-                                             'content-type': 'application/json',
+                                             'content-type':
+                                             'application/json',
                                              'x-access-token': self.token
                                          })
         self.assertEqual(self.response.status_code, 201)
@@ -118,86 +118,85 @@ class ReviewRoutesTestCase(unittest.TestCase):
 
     def test_create_review_for_own_business(self):
         """Try to create a review for a business owned by the current user."""
-        """Register a user, login, grab token, register business"""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.login),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.token = json.loads(self.response.data)['token']  # grab the token
-        self.client.post('/weconnect/api/v2/businesses',
+        self.client.post('/api/v2/businesses',
                          data=json.dumps(self.bs),
                          headers={
                              'content-type': 'application/json',
                              'x-access-token': self.token
                          })
-        self.response = self.client.post('/weconnect/api/v2/businesses/1/reviews',
+        self.response = self.client.post('/api/v2/businesses/1/reviews',
                                          data=json.dumps(self.test_review),
                                          headers={
-                                             'content-type': 'application/json',
+                                             'content-type':
+                                             'application/json',
                                              'x-access-token': self.token
                                          })
         self.assertEqual(self.response.status_code, 400)
-        self.assertIn("This business belongs to you",
+        self.assertIn("Reviewing own business not allowed",
                       str(self.response.data))
 
     def test_retrieves_all_reviews_for_a_business(self):
         """Create two reviews for a business, try to get them."""
-        """Register two users, each businesses, create reviews for one."""
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.login),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.token = json.loads(self.response.data)['token']  # grab the token
-        self.client.post('/weconnect/api/v2/businesses',
+        self.client.post('/api/v2/businesses',
                          data=json.dumps(self.bs),
                          headers={
                              'content-type': 'application/json',
                              'x-access-token': self.token
                          })
         # Register another user, login them and register their business
-        self.client.post('/weconnect/api/v2/auth/register',
+        self.client.post('/api/v2/auth/register',
                          data=json.dumps(self.another_user),
                          headers={
                              'content-type': 'application/json'
                          })
-        self.response = self.client.post('/weconnect/api/v2/auth/login',
+        self.response = self.client.post('/api/v2/auth/login',
                                          data=json.dumps(self.another_login),
                                          headers={
                                              'content-type': 'application/json'
                                          })
         self.token = json.loads(self.response.data)['token']  # grab the token
-        self.client.post('/weconnect/api/v2/businesses',
+        self.client.post('/api/v2/businesses',
                          data=json.dumps(self.another_bs),
                          headers={
                              'content-type': 'application/json',
                              'x-access-token': self.token
                          })
         # this user reviews bs 1 which belongs to the other user
-        self.client.post('/weconnect/api/v2/businesses/1/reviews',
+        self.client.post('/api/v2/businesses/1/reviews',
                          data=json.dumps(self.test_review),
                          headers={
                              'content-type': 'application/json',
                              'x-access-token': self.token
                          })
-        self.client.post('/weconnect/api/v2/businesses/1/reviews',
+        self.client.post('/api/v2/businesses/1/reviews',
                          data=json.dumps(self.test_review),
                          headers={
                              'content-type': 'application/json',
                              'x-access-token': self.token
                          })
-        self.response = self.client.get('/weconnect/api/v2/businesses/1/reviews')
+        self.response = self.client.get('/api/v2/businesses/1/reviews')
         self.assertEqual(self.response.status_code, 200)
         self.assertEqual(len(json.loads(self.response.data)['reviews']), 2)
 
