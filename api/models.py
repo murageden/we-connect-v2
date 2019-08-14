@@ -1,11 +1,6 @@
 """we_connect/models.py."""
 from flask_sqlalchemy import SQLAlchemy
-
-from .run import app
-
-# initialize sql-alchemy
-db = SQLAlchemy(app)
-
+from api import db
 
 class BaseModel(db.Model):
     """ Class is the base model """

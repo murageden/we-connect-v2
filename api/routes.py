@@ -8,12 +8,12 @@ import jwt
 import re
 
 # local imports
-from .models import User
-from .models import Business
-from .models import Review
-from .validators import Validator
-from .run import app
-from .models import db
+from api.models import User
+from api.models import Business
+from api.models import Review
+from api.validators import Validator
+from run import app
+
 
 validator = Validator()
 
